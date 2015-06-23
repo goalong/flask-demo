@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block page_content %}
+<div class="page-header user-profile">
+    <div class="user-avatar"><img src="{{ user.gravatar(128) }}"></div>
+    {% if current_user == user %}<a class="btn btn-default pull-right" href="{{ url_for('talks.profile') }}">Edit Profile</a>{% endif %}
+    <h1>{{ user.username }}</h1>
+    <p>
+        {% if user.name %}{{ user.name }}<br>{% endif %}
+        {% if user.location %}<a href="http://maps.google.com?q={{ user.location }}">{{ user.location }}</a><br>{% endif %}
+    </p>
+    {% if user.bio %}<p>{{ user.bio }}</p>{% endif %}
+</div>
+{% include "talks/_talks.html" %}
+{% if talks %}
+<ul class="pager">
+    {% if pagination.has_prev %}
+    <li class="previous"><a href="{{ url_for('talks.user', username=user.username, page=pagination.prev_num) }}">&larr; Newer</a></li>
+    {% else %}
+    <li class="previous disabled"><a href="#">&larr; Newer</a></li>
+    {% endif %}
+    {% if pagination.has_next %}
+    <li class="next"><a href="{{ url_for('talks.user', username=user.username, page=pagination.next_num) }}">Older &rarr;</a></li>
+    {% else %}
+    <li class="next disabled"><a href="#">Older &rarr;</a></li>
+    {% endif %}
+</ul>
+{% endif %}
+{% endblock %}
