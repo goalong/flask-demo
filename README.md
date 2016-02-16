@@ -9,3 +9,4 @@
 5. pip install -r requirements.txt
 6. python manage.py runserver
 7. 打开浏览器，在地址栏输入http://localhost:5000/
+8. 注册用户，在终端输入 python manage.py adduser <email> <username> 
