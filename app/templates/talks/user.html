@@ -3,8 +3,17 @@
 {% block page_content %}
 <div class="page-header user-profile">
     <div class="user-avatar"><img src="{{ user.gravatar(128) }}"></div>
-    {% if current_user == user %}<a class="btn btn-default pull-right" href="{{ url_for('talks.profile') }}">Edit Profile</a>{% endif %}
     <h1>{{ user.username }}</h1>
+    {% if current_user == user %}
+        <a class="btn btn-default pull-right" href="{{ url_for('talks.profile') }}">Edit Profile</a>
+        <p>已关注{{ followed }}人</p>
+        <p>关注者{{ followers }}人</p>
+    {% elif not current_user.is_following(user) %}
+        <a href="{{ url_for('talks.follow', username=user.username) }}">关注</a>
+    {% else %}
+        <a href="{{ url_for('talks.unfollow', username=user.username) }}">取消关注</a>
+    {% endif %}
+
     <p>
         {% if user.name %}{{ user.name }}<br>{% endif %}
         {% if user.location %}<a href="http://maps.google.com?q={{ user.location }}">{{ user.location }}</a><br>{% endif %}
