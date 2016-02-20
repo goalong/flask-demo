@@ -25,6 +25,7 @@
                 {% if current_user.is_authenticated() %}
                 <li><a href="{{ url_for('talks.user', username=current_user.username) }}">账号</a></li>
                 <li><a href="{{ url_for('talks.new_talk') }}">新文章</a></li>
+                    <li><a href="{{ url_for('talks.explore') }}">发现</a></li>
                 {% set moderation_count = current_user.for_moderation().count() %}
                 <li>
                     <a href="{{ url_for('talks.moderate') }}">设置
