@@ -1,6 +1,6 @@
 # encoding: utf-8
 from flask import render_template, flash, redirect, url_for, abort,\
-    request, current_app
+    request, current_app, g
 from flask.ext.login import login_required, current_user
 from .. import db
 from ..models import User, Talk, Comment, PendingEmail
@@ -20,6 +20,17 @@ def index():
     return render_template('talks/index.html', talks=talk_list,
                            pagination=pagination)
 
+@talks.route('/explore')
+@login_required
+def explore():
+    page = request.args.get('page', 1, type=int)
+    pagination = Talk.query.order_by(Talk.date.desc()).paginate(
+        page, per_page=current_app.config['TALKS_PER_PAGE'],
+        error_out=False)
+    talk_list = pagination.items
+    return render_template('talks/index.html', talks=talk_list,
+                           pagination=pagination)
+
 
 @talks.route('/user/<username>')
 def user(username):
@@ -29,6 +40,11 @@ def user(username):
         page, per_page=current_app.config['TALKS_PER_PAGE'],
         error_out=False)
     talk_list = pagination.items
+    if user == current_user:
+
+        return render_template('talks/user.html', user=user, talks=talk_list,
+                           followed=len(list(user.followed))-1, followers=len(list(user.followers))-1,
+                           pagination=pagination)
     return render_template('talks/user.html', user=user, talks=talk_list,
                            pagination=pagination)
 
@@ -155,3 +171,43 @@ def unsubscribe(token):
     PendingEmail.remove(email)
     flash('You will not receive any more email notifications about this talk.')
     return redirect(url_for('talks.talk', id=talk.id))
+
+
+@talks.route('/follow/<username>')
+@login_required
+def follow(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    if user is None:
+        flash('User %s not found.' % username)
+        return redirect(url_for('index'))
+    if user == current_user:
+        flash('You can\'t follow yourself.')
+        return redirect(url_for('talks.user', username=username))
+    u = current_user.follow(user)
+    if u is None:
+        flash('Cannot follow ' + username + '.')
+        return redirect(url_for('talks.user', username=username))
+    db.session.add(u)
+    db.session.commit()
+    flash('You are now following ' + username + '!')
+    return redirect(url_for('talks.user', username=username))
+
+@talks.route('/unfollow/<username>')
+@login_required
+def unfollow(username):
+    user = User.query.filter_by(username=username).first()
+    if user is None:
+        flash('User %s not found.' % username)
+        return redirect(url_for('index'))
+    if user == current_user:
+        flash('You can\'t unfollow yourself!')
+        return redirect(url_for('talks.user', username=username))
+    u = current_user.unfollow(user)
+    if u is None:
+        flash('Cannot unfollow ' + username + '.')
+        return redirect(url_for('talks.user', username=username))
+    db.session.add(u)
+    db.session.commit()
+    flash('You have stopped following ' + username + '.')
+    return redirect(url_for('talks.user', username=username))
+    
