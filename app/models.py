@@ -9,6 +9,13 @@ from flask.ext.login import UserMixin
 from . import db, login_manager
 
 
+followers = db.Table(
+    'followers',
+    db.Column('follower_id', db.Integer, db.ForeignKey('users.id')),
+    db.Column('followed_id', db.Integer, db.ForeignKey('users.id'))
+)
+
+
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
@@ -25,6 +32,32 @@ class User(UserMixin, db.Model):
     avatar_hash = db.Column(db.String(32))
     talks = db.relationship('Talk', lazy='dynamic', backref='author')
     comments = db.relationship('Comment', lazy='dynamic', backref='author')
+    followed = db.relationship('User',
+                               secondary=followers,
+                               primaryjoin=(followers.c.follower_id == id),
+                               secondaryjoin=(followers.c.followed_id == id),
+                               backref=db.backref('followers', lazy='dynamic'),
+                               lazy='dynamic')
+
+    def follow(self, user):
+        if not self.is_following(user):
+            self.followed.append(user)
+            return self
+
+    def unfollow(self, user):
+        if self.is_following(user):
+            self.followed.remove(user)
+            return self
+
+    def is_following(self, user):
+        return self.followed.filter(
+            followers.c.followed_id == user.id).count() > 0
+
+    def followed_posts(self):
+        return Talk.query.join(
+            followers, (followers.c.followed_id == Talk.user_id)).filter(
+                followers.c.follower_id == self.id).order_by(
+                    Talk.date.desc())
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
@@ -76,6 +109,8 @@ class User(UserMixin, db.Model):
         return None
 
 
+
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -86,8 +121,8 @@ class Talk(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128), nullable=False)
     description = db.Column(db.Text)
-    slides = db.Column(db.Text())
-    video = db.Column(db.Text())
+    # slides = db.Column(db.Text())
+    # video = db.Column(db.Text())
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     venue = db.Column(db.String(128))
     venue_url = db.Column(db.String(128))

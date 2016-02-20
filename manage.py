@@ -9,11 +9,14 @@ if os.path.exists('.env'):
 
 from app import create_app
 from flask.ext.script import Manager
+from flask.ext.migrate import Migrate, MigrateCommand
 from app import db
 from app.models import User
 
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
+migrate = Migrate(app, db)
 manager = Manager(app)
+manager.add_command('db', MigrateCommand)
 
 
 @manager.command
@@ -37,6 +40,8 @@ def adduser(email, username, admin=False):
     user = User(email=email, username=username, password=password,
                 is_admin=admin)
     db.session.add(user)
+    db.session.commit()
+    db.session.add(user.follow(user))
     db.session.commit()
     print('User {0} was registered successfully.'.format(username))
 
