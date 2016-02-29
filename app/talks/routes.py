@@ -59,7 +59,7 @@ def profile():
         current_user.bio = form.bio.data
         db.session.add(current_user._get_current_object())
         db.session.commit()
-        flash('Your profile has been updated.')
+        flash(u'您的信息已更新')
         return redirect(url_for('talks.user', username=current_user.username))
     form.name.data = current_user.name
     form.location.data = current_user.location
@@ -76,7 +76,7 @@ def new_talk():
         form.to_model(talk)
         db.session.add(talk)
         db.session.commit()
-        flash('The talk was added successfully.')
+        flash(u'发布成功')
         return redirect(url_for('.index'))
     return render_template('talks/edit_talk.html', form=form)
 
@@ -140,7 +140,7 @@ def edit_talk(id):
         form.to_model(talk)
         db.session.add(talk)
         db.session.commit()
-        flash('The talk was updated successfully.')
+        flash(u'修改成功')
         return redirect(url_for('.talk', id=talk.id))
     form.from_model(talk)
     return render_template('talks/edit_talk.html', form=form)

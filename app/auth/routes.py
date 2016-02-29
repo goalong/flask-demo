@@ -1,3 +1,4 @@
+# encoding: utf-8
 from flask import render_template, current_app, request, redirect, url_for, \
     flash
 from flask.ext.login import login_user, logout_user, login_required
@@ -15,7 +16,7 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user is None or not user.verify_password(form.password.data):
-            flash('Invalid email or password.')
+            flash(u'邮箱或密码错误')
             return redirect(url_for('.login'))
         login_user(user, form.remember_me.data)
         return redirect(request.args.get('next') or url_for('talks.index'))
@@ -26,5 +27,5 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash('You have been logged out.')
+    flash(u'您已退出登录')
     return redirect(url_for('talks.index'))
