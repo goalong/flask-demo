@@ -15,5 +15,5 @@ uploads/
 .project
 .pydevproject
 .python-version
-.sqlite
-.pyc
+*.sqlite
+*.pyc
