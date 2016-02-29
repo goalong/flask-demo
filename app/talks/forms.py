@@ -8,7 +8,7 @@ from flask.ext.pagedown.fields import PageDownField
 
 class ProfileForm(Form):
     name = StringField(u'姓名', validators=[Optional(), Length(1, 64)])
-    location = StringField('Location', validators=[Optional(), Length(1, 64)])
+    location = StringField(u'位置', validators=[Optional(), Length(1, 64)])
     bio = TextAreaField('Bio')
     submit = SubmitField(u'提交')
 
