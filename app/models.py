@@ -1,3 +1,4 @@
+# encoding: utf8
 from datetime import datetime
 import hashlib
 from markdown import markdown
@@ -162,9 +163,9 @@ class Comment(db.Model):
     body_html = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    # author_name = db.Column(db.String(64))
-    # author_email = db.Column(db.String(64))
-    # notify = db.Column(db.Boolean, default=True)
+    author_name = db.Column(db.String(64))
+    author_email = db.Column(db.String(64))     #允许未注册用户评论
+    notify = db.Column(db.Boolean, default=True)
     approved = db.Column(db.Boolean, default=False)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
     reply_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
@@ -180,6 +181,16 @@ class Comment(db.Model):
         target.body_html = bleach.linkify(bleach.clean(
             markdown(value, output_format='html'),
             tags=allowed_tags, strip=True))
+
+    @property
+    def approve_count(self):
+        return User_Approve.query.filter(User_Approve.target_type=="comment", User_Approve.target_id==self.id).count()
+
+    @property
+    def reply_name(self):
+        if not self.reply_id:
+            return None
+        return User.query.get(self.reply_id).username
 
     @staticmethod
     def for_moderation():
@@ -204,6 +215,17 @@ class Comment(db.Model):
 
 
 db.event.listen(Comment.body, 'set', Comment.on_changed_body)
+
+
+class User_Approve(db.Model):
+    __tablename__ = 'user_approve'
+    id = db.Column(db.Integer, primary_key=True)
+    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    approved = db.Column(db.Boolean, default=False)
+    target_type = db.Column(db.String(32))
+    target_id = db.Column(db.Integer)
+
 
 
 # class PendingEmail(db.Model):

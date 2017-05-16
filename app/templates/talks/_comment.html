@@ -27,25 +27,25 @@
         (<a href="mailto:{{ comment.author_email }}">{{ comment.author_email }}</a>)
         {% endif %}
     {% endif %}
-    commented {{ moment(comment.timestamp).fromNow() }}:
+    {% if comment.reply_id %}
+    reply to <a href="{{ url_for('.user', username=comment.reply_name) }}">{{ comment.reply_name }}</a>
+    {% else %}
+    commented
+    {% endif %}
+    {{ moment(comment.timestamp).fromNow() }}:
 </p>
-<div class="comment-body" data-comment-id={{ comment.id }}>
+<div class="comment-body" data-comment-id={{ comment.id }} data-type="comment">
+    {% if comment.body_html %}
     {{ comment.body_html | safe }}
+    {% else %}
+    {{ comment.body }}
+    {% endif %}
     <div class="comment-action">
     <span class="glyphicon glyphicon-thumbs-up"></span>
+        <span class="upvote-count">{{ comment.approve_count }}</span>
+        <span class="separator">·</span>
     <span class="glyphicon glyphicon-comment reply_comment"></span>
     </div>
-    {% include "talks/_child_comments.html" %}
-{#    <ul class="child-comments">#}
-{#    {% if comment.children %}#}
-{#        {% for child_comment in comment.children %}#}
-{#            <li class="comment">#}
-{#        <div>#}
-{#        {{ child_comment.author.username }}: {{ child_comment.body }}#}
-{#        </div>#}
-{#        </li>#}
-{#        {% endfor %}#}
-{#    {% endif %}#}
-{#    </ul>#}
+{#    {% include "talks/_child_comments.html" %}#}
 
 </div>

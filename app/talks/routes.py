@@ -43,7 +43,7 @@ def user(username):
     if user == current_user:
 
         return render_template('talks/user.html', user=user, talks=talk_list,
-                           followed=len(list(user.followed))-1, followers=len(list(user.followers))-1,
+                           followed=len(list(user.user_follow))-1, followers=len(list(user.followee))-1,
                            pagination=pagination)
     return render_template('talks/user.html', user=user, talks=talk_list,
                            pagination=pagination)
@@ -113,7 +113,7 @@ def talk(id):
         return redirect(url_for('.talk', id=post.id) + '#top')
     if post.author == current_user or \
             (current_user.is_authenticated and current_user.is_admin):
-        comments_query = post.comments.filter(Comment.parent_id == None)
+        comments_query = post.comments
     else:
         comments_query = post.approved_comments()  #Todo, fix
     page = request.args.get('page', 1, type=int)

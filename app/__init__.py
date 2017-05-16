@@ -51,6 +51,7 @@ def create_app(config_name):
         syslog_handler.setLevel(logging.WARNING)
         app.logger.addHandler(syslog_handler)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+    app.config['BOOTSTRAP_SERVE_LOCAL'] = True
 
     bootstrap.init_app(app)
     db.init_app(app)

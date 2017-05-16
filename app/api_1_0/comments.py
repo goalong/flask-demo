@@ -10,7 +10,7 @@ from .errors import forbidden, bad_request
 @api.route('/comments/<int:id>', methods=['PUT'])
 def approve_comment(id):
     comment = Comment.query.get_or_404(id)
-    if comment.talk.author != g.current_user and \
+    if comment.post.author != g.current_user and \
             not g.current_user.is_admin:
         return forbidden('You cannot modify this comment.')
     if comment.approved:
@@ -25,7 +25,7 @@ def approve_comment(id):
 @api.route('/comments/<int:id>', methods=['DELETE'])
 def delete_comment(id):
     comment = Comment.query.get_or_404(id)
-    if comment.talk.author != g.current_user and \
+    if comment.post.author != g.current_user and \
             not g.current_user.is_admin:
         return forbidden('You cannot modify this comment.')
     if comment.approved:

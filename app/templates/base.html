@@ -29,7 +29,7 @@
                     <li><a href="{{ url_for('talks.explore') }}">发现</a></li>
                 {% set moderation_count = current_user.for_moderation().count() %}
                 <li>
-                    <a href="{{ url_for('talks.moderate') }}">设置
+                    <a href="{{ url_for('talks.moderate') }}">Review
                         {% if moderation_count %}
                         <span class="badge badge-red">{{ moderation_count }}</span>
                         {% endif %}

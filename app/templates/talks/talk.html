@@ -59,7 +59,7 @@ $(".reply_comment").click(function(event) {
     comment_box.remove();
 
 {#    var t = $(event.target).parent().parent();#}
-    var comment_body = $(event.target).closest(".comment-body")
+    var comment_body = $(event.target).closest(".comment-body");
 {#    console.log(t);#}
     comment_id = comment_body.attr("data-comment-id");
     url = "/comment/" + comment_id;
@@ -70,15 +70,6 @@ $(".reply_comment").click(function(event) {
     </div></form>');
 });
 
-$(".submit-comment").click(function(event) {
-    alert("tt");
-    event.preventDefault();
-
-    var form = $(event.target).parent().parent();
-
-    console.log(t);
-
-});
 
 $("body").on("submit", ".frm_add", function (event){
 
@@ -109,18 +100,39 @@ $("body").on("submit", ".frm_add", function (event){
 });
 });
 
-$('.comment-form').submit(function(event) {
+$('.glyphicon-thumbs-up').click(function(event) {
     // get all the inputs into an array.
 {#    event.preventDefault();#}
 
-    alert("lala");
-    var form = $(event.target);
-    alert(form.serialize());
-{#    var $inputs = $('#myForm :input');#}
-{#    var values = {};#}
-{#    $inputs.each(function() {#}
-{#        values[this.name] = $(this).val();#}
-{#    });#}
+    var comment_body = $(event.target).closest(".comment-body");
+    var target_id = comment_body.attr("data-comment-id");
+    var target_type = comment_body.attr("data-type");
+    var current_url = window.location.pathname;
+{#    alert(target_id);#}
+{#    var form = $(event.target);#}
+    $.ajax({
+    url : current_url + "/approve",
+    type: "POST",
+    data : {target_id: target_id, target_type: target_type},
+    success: function(data, textStatus, jqXHR)
+    {
+        console.log(data);
+        if (data.rs == 1) {
+            var element = comment_body.find(".upvote-count");
+{#            console.log(element);#}
+            var approve_count = parseInt(element.text()) + 1;
+{#            alert(approve_count);#}
+            element.text(approve_count);
+
+
+        }
+    },
+    error: function (jqXHR, textStatus, errorThrown)
+    {
+
+    }
+});
+
 
 });
 
