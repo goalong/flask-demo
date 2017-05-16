@@ -1,10 +1,10 @@
 from flask import Flask
-from flask.ext.bootstrap import Bootstrap
-from flask.ext.sqlalchemy import SQLAlchemy
-from flask.ext.login import LoginManager
-from flask.ext.moment import Moment
-from flask.ext.pagedown import PageDown
-from flask.ext.mail import Mail
+from flask_bootstrap import Bootstrap
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
+from flask_moment import Moment
+from flask_pagedown import PageDown
+from flask_mail import Mail
 from config import config
 
 bootstrap = Bootstrap()
@@ -50,6 +50,7 @@ def create_app(config_name):
         syslog_handler = SysLogHandler()
         syslog_handler.setLevel(logging.WARNING)
         app.logger.addHandler(syslog_handler)
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
     bootstrap.init_app(app)
     db.init_app(app)
@@ -57,9 +58,14 @@ def create_app(config_name):
     pagedown.init_app(app)
     mail.init_app(app)
     login_manager.init_app(app)
+    with app.app_context():
+        db.create_all()
 
     from .talks import talks as talks_blueprint
     app.register_blueprint(talks_blueprint)
+
+    from .comments import comment as comment_blueprint
+    app.register_blueprint(comment_blueprint)
 
     from .auth import auth as auth_blueprint
     app.register_blueprint(auth_blueprint, url_prefix='/auth')
@@ -67,9 +73,9 @@ def create_app(config_name):
     from .api_1_0 import api as api_blueprint
     app.register_blueprint(api_blueprint, url_prefix='/api/1.0')
 
-    from app.emails import start_email_thread
-    @app.before_first_request
-    def before_first_request():
-        start_email_thread()
+    # from app.emails import start_email_thread
+    # @app.before_first_request
+    # def before_first_request():
+    #     start_email_thread()
 
     return app

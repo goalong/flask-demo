@@ -5,19 +5,19 @@ import bleach
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from flask import request, current_app
-from flask.ext.login import UserMixin
+from flask_login import UserMixin
 from . import db, login_manager
 
 
 followers = db.Table(
-    'followers',
-    db.Column('follower_id', db.Integer, db.ForeignKey('users.id')),
-    db.Column('followed_id', db.Integer, db.ForeignKey('users.id'))
+    'user_follow',
+    db.Column('follower_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('followee_id', db.Integer, db.ForeignKey('user.id'))
 )
 
 
 class User(UserMixin, db.Model):
-    __tablename__ = 'users'
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(64),
                       nullable=False, unique=True, index=True)
@@ -27,37 +27,37 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128))
     name = db.Column(db.String(64))
     location = db.Column(db.String(64))
-    bio = db.Column(db.Text())
+    bio = db.Column(db.String(256))
     member_since = db.Column(db.DateTime(), default=datetime.utcnow)
-    avatar_hash = db.Column(db.String(32))
-    talks = db.relationship('Talk', lazy='dynamic', backref='author')
+    avatar_hash = db.Column(db.String(64))
+    posts = db.relationship('Post', lazy='dynamic', backref='author')
     comments = db.relationship('Comment', lazy='dynamic', backref='author')
-    followed = db.relationship('User',
+    followee = db.relationship('User',
                                secondary=followers,
                                primaryjoin=(followers.c.follower_id == id),
-                               secondaryjoin=(followers.c.followed_id == id),
-                               backref=db.backref('followers', lazy='dynamic'),
+                               secondaryjoin=(followers.c.followee_id == id),
+                               backref=db.backref('user_follow', lazy='dynamic'),
                                lazy='dynamic')
 
     def follow(self, user):
         if not self.is_following(user):
-            self.followed.append(user)
+            self.followee.append(user)
             return self
 
     def unfollow(self, user):
         if self.is_following(user):
-            self.followed.remove(user)
+            self.followee.remove(user)
             return self
 
     def is_following(self, user):
-        return self.followed.filter(
-            followers.c.followed_id == user.id).count() > 0
+        return self.followee.filter(
+            followers.c.followee_id == user.id).count() > 0
 
     def followed_posts(self):
-        return Talk.query.join(
-            followers, (followers.c.followed_id == Talk.user_id)).filter(
+        return Post.query.join(
+            followers, (followers.c.followee_id == Post.user_id)).filter(
                 followers.c.follower_id == self.id).order_by(
-                    Talk.date.desc())
+            Post.date.desc())
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
@@ -89,8 +89,8 @@ class User(UserMixin, db.Model):
     def for_moderation(self, admin=False):
         if admin and self.is_admin:
             return Comment.for_moderation()
-        return Comment.query.join(Talk, Comment.talk_id == Talk.id).\
-            filter(Talk.author == self).filter(Comment.approved == False)
+        return Comment.query.join(Post, Comment.post_id == Post.id).\
+            filter(Post.author == self).filter(Comment.approved == False)
 
     def get_api_token(self, expiration=300):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
@@ -116,19 +116,16 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 
-class Talk(db.Model):
-    __tablename__ = 'talks'
+class Post(db.Model):
+    __tablename__ = 'post'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128), nullable=False)
     description = db.Column(db.Text)
-    # slides = db.Column(db.Text())
-    # video = db.Column(db.Text())
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     venue = db.Column(db.String(128))
     venue_url = db.Column(db.String(128))
-    date = db.Column(db.DateTime())
-    comments = db.relationship('Comment', lazy='dynamic', backref='talk')
-    emails = db.relationship('PendingEmail', lazy='dynamic', backref='talk')
+    date = db.Column(db.DateTime(), default=datetime.utcnow)
+    comments = db.relationship('Comment', lazy='dynamic', backref='post', uselist=True)
 
     def approved_comments(self):
         return self.comments.filter_by(approved=True)
@@ -148,7 +145,7 @@ class Talk(db.Model):
         email = data.get('email')
         if not id or not email:
             return None, None
-        talk = Talk.query.get(id)
+        talk = Post.query.get(id)
         if not talk:
             return None, None
         Comment.query\
@@ -164,12 +161,16 @@ class Comment(db.Model):
     body = db.Column(db.Text)
     body_html = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-    author_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    author_name = db.Column(db.String(64))
-    author_email = db.Column(db.String(64))
-    notify = db.Column(db.Boolean, default=True)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    # author_name = db.Column(db.String(64))
+    # author_email = db.Column(db.String(64))
+    # notify = db.Column(db.Boolean, default=True)
     approved = db.Column(db.Boolean, default=False)
-    talk_id = db.Column(db.Integer, db.ForeignKey('talks.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    reply_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
+    parent_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
+    children = db.relationship('Comment', backref=db.backref("parent", remote_side=[id]),  uselist=True,
+                                     foreign_keys="Comment.parent_id")
 
     @staticmethod
     def on_changed_body(target, value, oldvalue, initiator):
@@ -205,23 +206,23 @@ class Comment(db.Model):
 db.event.listen(Comment.body, 'set', Comment.on_changed_body)
 
 
-class PendingEmail(db.Model):
-    __tablename__ = 'pending_emails'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64))
-    email = db.Column(db.String(64), index=True)
-    subject = db.Column(db.String(128))
-    body_text = db.Column(db.Text())
-    body_html = db.Column(db.Text())
-    talk_id = db.Column(db.Integer, db.ForeignKey('talks.id'))
-    timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
-
-    @staticmethod
-    def already_in_queue(email, talk):
-        return PendingEmail.query\
-            .filter(PendingEmail.talk_id == talk.id)\
-            .filter(PendingEmail.email == email).count() > 0
-
-    @staticmethod
-    def remove(email):
-        PendingEmail.query.filter_by(email=email).delete()
+# class PendingEmail(db.Model):
+#     __tablename__ = 'pending_emails'
+#     id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String(64))
+#     email = db.Column(db.String(64), index=True)
+#     subject = db.Column(db.String(128))
+#     body_text = db.Column(db.Text())
+#     body_html = db.Column(db.Text())
+#     talk_id = db.Column(db.Integer, db.ForeignKey('talks.id'))
+#     timestamp = db.Column(db.DateTime, index=True, default=datetime.utcnow)
+#
+#     @staticmethod
+#     def already_in_queue(email, talk):
+#         return PendingEmail.query\
+#             .filter(PendingEmail.talk_id == talk.id)\
+#             .filter(PendingEmail.email == email).count() > 0
+#
+#     @staticmethod
+#     def remove(email):
+#         PendingEmail.query.filter_by(email=email).delete()

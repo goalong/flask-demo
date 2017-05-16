@@ -1,3 +1,4 @@
+
 .user-profile {
     min-height: 140px;
 }
@@ -73,6 +74,16 @@ div.talk-slides {
     font-size: 120%;
 }
 
+ul.child-comments {
+    list-style-type: none;
+    padding: 0px;
+}
+
+li.child-comment {
+    padding: 12px;
+}
+
+
 ul.comment-list {
     list-style-type: none;
     padding: 0px;
@@ -82,16 +93,54 @@ li.comment {
     padding: 10px;
 }
 
-ul.comment-list li.comment:nth-child(odd)
+ul.child-comments li.child-comment:nth-child(odd)
 {
     background-color: #eee;
 }
 
-ul.comment-list li.comment:nth-child(even)
+ul.child-comments li.child-comment:nth-child(even)
 {
     background-color: #fff;
 }
 
+/*ul.comment-list li.comment:nth-child(odd)*/
+/*{*/
+    /*background-color: #eee;*/
+/*}*/
+
+/*ul.comment-list li.comment:nth-child(even)*/
+/*{*/
+    /*background-color: #fff;*/
+/*}*/
+
 .badge-red {
     background-color:#d44;
 }
+
+.btn-hover:hover {
+  font-weight: normal;
+  color: #333333;
+  cursor: pointer;
+  background-color: inherit;
+  border-color: transparent;
+}
+
+
+.respond-test:hover {
+  color: red;
+    background-color: darkgreen;
+}
+
+/*.comment:hover {*/
+    /*color: yellow;*/
+    /*background-color: yellow;*/
+
+/*}*/
+
+.comment-action {
+    color: #666;
+}
+
+
+
+

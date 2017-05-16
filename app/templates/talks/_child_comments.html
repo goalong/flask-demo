@@ -1,0 +1,14 @@
+<ul class="child-comments">
+    {% if comment.children %}
+        {% for child_comment in comment.children %}
+            <li class="child-comment">
+            <div>{{ child_comment.author.username }}: <br>
+                {{ child_comment.body }}</div>
+            <div class="comment-action">
+                <span class="glyphicon glyphicon-thumbs-up"></span>
+                <span class="glyphicon glyphicon-comment reply_comment"></span>
+            </div>
+            </li>
+        {% endfor %}
+    {% endif %}
+</ul>

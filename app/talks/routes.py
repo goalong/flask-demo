@@ -1,10 +1,10 @@
 # encoding: utf-8
 from flask import render_template, flash, redirect, url_for, abort,\
     request, current_app, g
-from flask.ext.login import login_required, current_user
+from flask_login import login_required, current_user
 from .. import db
-from ..models import User, Talk, Comment, PendingEmail
-from ..emails import send_author_notification, send_comment_notification
+from ..models import User, Post, Comment
+# from ..emails import send_author_notification, send_comment_notification
 from . import talks
 from .forms import ProfileForm, TalkForm, CommentForm, PresenterCommentForm
 
@@ -24,7 +24,7 @@ def index():
 @login_required
 def explore():
     page = request.args.get('page', 1, type=int)
-    pagination = Talk.query.order_by(Talk.date.desc()).paginate(
+    pagination = Post.query.order_by(Post.date.desc()).paginate(
         page, per_page=current_app.config['TALKS_PER_PAGE'],
         error_out=False)
     talk_list = pagination.items
@@ -36,7 +36,7 @@ def explore():
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
     page = request.args.get('page', 1, type=int)
-    pagination = user.talks.order_by(Talk.date.desc()).paginate(
+    pagination = user.posts.order_by(Post.date.desc()).paginate(
         page, per_page=current_app.config['TALKS_PER_PAGE'],
         error_out=False)
     talk_list = pagination.items
@@ -72,7 +72,7 @@ def profile():
 def new_talk():
     form = TalkForm()
     if form.validate_on_submit():
-        talk = Talk(author=current_user)
+        talk = Post(author=current_user)
         form.to_model(talk)
         db.session.add(talk)
         db.session.commit()
@@ -81,50 +81,50 @@ def new_talk():
     return render_template('talks/edit_talk.html', form=form)
 
 
-@talks.route('/talk/<int:id>', methods=['GET', 'POST'])
+@talks.route('/post/<int:id>', methods=['GET', 'POST'])
 def talk(id):
-    talk = Talk.query.get_or_404(id)
+    post = Post.query.get_or_404(id)
     comment = None
-    if current_user.is_authenticated():
+    if current_user.is_authenticated:
         form = PresenterCommentForm()
         if form.validate_on_submit():
             comment = Comment(body=form.body.data,
-                              talk=talk,
+                              post=post,
                               author=current_user,
-                              notify=False, approved=True)
+                              approved=True)
     else:
         form = CommentForm()
         if form.validate_on_submit():
             comment = Comment(body=form.body.data,
-                              talk=talk,
+                              post=post,
                               author_name=form.name.data,
                               author_email=form.email.data,
-                              notify=form.notify.data, approved=False)
+                              approved=False)
     if comment:
         db.session.add(comment)
         db.session.commit()
         if comment.approved:
-            send_comment_notification(comment)
+            # send_comment_notification(comment)
             flash('Your comment has been published.')
         else:
-            send_author_notification(talk)
+            # send_author_notification(talk)
             flash('Your comment will be published after it is reviewed by '
                   'the presenter.')
-        return redirect(url_for('.talk', id=talk.id) + '#top')
-    if talk.author == current_user or \
-            (current_user.is_authenticated() and current_user.is_admin):
-        comments_query = talk.comments
+        return redirect(url_for('.talk', id=post.id) + '#top')
+    if post.author == current_user or \
+            (current_user.is_authenticated and current_user.is_admin):
+        comments_query = post.comments.filter(Comment.parent_id == None)
     else:
-        comments_query = talk.approved_comments()
+        comments_query = post.approved_comments()  #Todo, fix
     page = request.args.get('page', 1, type=int)
     pagination = comments_query.order_by(Comment.timestamp.asc()).paginate(
         page, per_page=current_app.config['COMMENTS_PER_PAGE'],
         error_out=False)
     comments = pagination.items
     headers = {}
-    if current_user.is_authenticated():
+    if current_user.is_authenticated:
         headers['X-XSS-Protection'] = '0'
-    return render_template('talks/talk.html', talk=talk, form=form,
+    return render_template('talks/talk.html', talk=post, form=form,
                            comments=comments, pagination=pagination),\
            200, headers
 
@@ -132,7 +132,7 @@ def talk(id):
 @talks.route('/edit/<int:id>', methods=['GET', 'POST'])
 @login_required
 def edit_talk(id):
-    talk = Talk.query.get_or_404(id)
+    talk = Post.query.get_or_404(id)
     if not current_user.is_admin and talk.author != current_user:
         abort(403)
     form = TalkForm()
@@ -164,11 +164,11 @@ def moderate_admin():
 
 @talks.route('/unsubscribe/<token>')
 def unsubscribe(token):
-    talk, email = Talk.unsubscribe_user(token)
+    talk, email = Post.unsubscribe_user(token)
     if not talk or not email:
         flash('Invalid unsubscribe token.')
         return redirect(url_for('talks.index'))
-    PendingEmail.remove(email)
+    # PendingEmail.remove(email)
     flash('You will not receive any more email notifications about this talk.')
     return redirect(url_for('talks.talk', id=talk.id))
 

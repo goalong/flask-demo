@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 {% import "bootstrap/wtf.html" as wtf %}
 
+<style>
+a:hover
+{
+background-color:red;
+}
+</style>
+
 {% block page_content %}
 <div class="page-header">
     {% include "talks/_talk_header.html" %}
@@ -45,6 +52,78 @@
     $(document).ready(function() {
         $('#flask-pagedown-body').autosize();
     });
+$(".reply_comment").click(function(event) {
+{#    alert("lala"); todo: 应该先检查有没有已经打开的评论框,如果有,remove,#}
+    var comment_box = $("body").find(".frm_add");
+    console.log(comment_box);
+    comment_box.remove();
+
+{#    var t = $(event.target).parent().parent();#}
+    var comment_body = $(event.target).closest(".comment-body")
+{#    console.log(t);#}
+    comment_id = comment_body.attr("data-comment-id");
+    url = "/comment/" + comment_id;
+    comment_body.append('<form class="frm_add"><textarea cols="10" rows="3" class="form-control comment-message" placeholder="Whats on your mind ?"></textarea>' +
+            '<div class="comment-action" style="height: 28px; position: relative;"> \
+        <button class="btn btn-default btn-cancel" style="right: 70px; position: absolute;" type="button">取消</button> \
+        <button class="btn btn-primary btn-comment" style="position: absolute; right: 0;" type="submit">评论</button> \
+    </div></form>');
+});
+
+$(".submit-comment").click(function(event) {
+    alert("tt");
+    event.preventDefault();
+
+    var form = $(event.target).parent().parent();
+
+    console.log(t);
+
+});
+
+$("body").on("submit", ".frm_add", function (event){
+
+    event.preventDefault();
+{#    alert("gaga");  注意, comment-message在一个页面只显示一个#}
+
+    var child_comments = $(event.target).parent().find(".child-comments");
+    var parent_comment_id = $(event.target).parent().attr("data-comment-id");
+    var input = $(".comment-message").val();
+{#    console.log(child_comments);#}
+    var current_url = window.location.pathname;
+    $(this).closest("form").remove();
+    child_comments.append('<p id="comment-form">' + input  + '</p>');
+
+   /* $.ajax function will go here to save row */
+   $.ajax({
+    url : current_url + "/reply_comment",
+    type: "POST",
+    data : {parent_id: parent_comment_id, content: input, reply_id: parent_comment_id},
+    success: function(data, textStatus, jqXHR)
+    {
+        console.log(data);
+    },
+    error: function (jqXHR, textStatus, errorThrown)
+    {
+
+    }
+});
+});
+
+$('.comment-form').submit(function(event) {
+    // get all the inputs into an array.
+{#    event.preventDefault();#}
+
+    alert("lala");
+    var form = $(event.target);
+    alert(form.serialize());
+{#    var $inputs = $('#myForm :input');#}
+{#    var values = {};#}
+{#    $inputs.each(function() {#}
+{#        values[this.name] = $(this).val();#}
+{#    });#}
+
+});
+
 </script>
 {% include "_api_client.html" %}
 {% endblock %}
