@@ -1,8 +1,15 @@
 <div class="talk-header">
+    {% if talk.tags %}
+    {% for tag in talk.tags %}
+    <a href="{{ url_for('tag.tag_profile', tag_name=tag.name) }}">{{ tag.name }}</a>
+    {% endfor %}
+    {% endif %}
+    {% if  not read_only %}
     {% if talk.author == current_user %}
     <a class="btn btn-primary pull-right" href="{{ url_for('talks.edit_talk', id=talk.id) }}">Edit</a>
     {% elif current_user.is_admin %}
     <a class="btn btn-danger pull-right" href="{{ url_for('talks.edit_talk', id=talk.id) }}">Edit</a>
+    {% endif %}
     {% endif %}
     <h2><a href="{{ url_for('talks.talk', id=talk.id) }}">{{ talk.title }}</a></h2>
     <h3>{{ talk.description }}</h3>
@@ -10,11 +17,6 @@
 
     <p>
         Presented by <a href="{{ url_for('talks.user', username=talk.author.username) }}">{{ talk.author.username }}</a> at
-        {% if talk.venue_url %}
-            <a href="{{ talk.venue_url }}">{{ talk.venue }}</a>
-        {% else %}
-            {{ talk.venue }}
-        {% endif %}
         on {{ moment(talk.date, local=True).format('LL') }}.
     </p>
 </div>

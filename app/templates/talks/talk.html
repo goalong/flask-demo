@@ -54,20 +54,32 @@ background-color:red;
     });
 $(".reply_comment").click(function(event) {
 {#    alert("lala"); todo: 应该先检查有没有已经打开的评论框,如果有,remove,#}
-    var comment_box = $("body").find(".frm_add");
-    console.log(comment_box);
-    comment_box.remove();
-
-{#    var t = $(event.target).parent().parent();#}
+    event.preventDefault();
     var comment_body = $(event.target).closest(".comment-body");
-{#    console.log(t);#}
     comment_id = comment_body.attr("data-comment-id");
-    url = "/comment/" + comment_id;
-    comment_body.append('<form class="frm_add"><textarea cols="10" rows="3" class="form-control comment-message" placeholder="Whats on your mind ?"></textarea>' +
-            '<div class="comment-action" style="height: 28px; position: relative;"> \
-        <button class="btn btn-default btn-cancel" style="right: 70px; position: absolute;" type="button">取消</button> \
-        <button class="btn btn-primary btn-comment" style="position: absolute; right: 0;" type="submit">评论</button> \
-    </div></form>');
+{#    alert(comment_id);#}
+    $("input#reply_id").attr("value", comment_id);
+{#    $(".flask-pagedown-input").attr("reply-id", comment_id);#}
+    $('html, body').animate({
+            scrollTop: $(".flask-pagedown-input").offset().top
+        }, 500, function() {
+            $(".flask-pagedown-input").focus();
+        });
+
+{#    alert("tt");#}
+
+{#    var comment_box = $("body").find(".frm_add");#}
+{#    console.log(comment_box);#}
+{#    comment_box.remove();#}
+{##}
+{#    var comment_body = $(event.target).closest(".comment-body");#}
+{#    comment_id = comment_body.attr("data-comment-id");#}
+{#    url = "/comment/" + comment_id;#}
+{#    comment_body.append('<form class="frm_add"><textarea cols="10" rows="3" class="form-control comment-message" placeholder="Whats on your mind ?"></textarea>' +#}
+{#            '<div class="comment-action" style="height: 28px; position: relative;"> \#}
+{#        <button class="btn btn-default btn-cancel" style="right: 70px; position: absolute;" type="button">取消</button> \#}
+{#        <button class="btn btn-primary btn-comment" style="position: absolute; right: 0;" type="submit">评论</button> \#}
+{#    </div></form>');#}
 });
 
 

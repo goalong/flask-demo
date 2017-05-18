@@ -1,9 +1,11 @@
 # encoding: utf-8
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, BooleanField, SubmitField
+from wtforms import StringField, TextAreaField, BooleanField, SubmitField, HiddenField
 from wtforms.fields.html5 import DateField
 from wtforms.validators import Optional, Length, URL, Email, DataRequired
 from flask_pagedown.fields import PageDownField
+
+from app.models import Tag
 
 
 class ProfileForm(FlaskForm):
@@ -15,36 +17,43 @@ class ProfileForm(FlaskForm):
 
 class TalkForm(FlaskForm):
     title = StringField(u'标题', validators=[DataRequired(), Length(1, 128)])
-    description = TextAreaField(u'描述')
+    description = TextAreaField(u'内容')
     # slides = StringField('Slides Embed Code (450 pixels wide)')
     # video = StringField('Video Embed Code (450 pixels wide)')
-    venue = StringField(u'地点',
+    tags = StringField(u'标签',
                         validators=[Length(1, 128)])
-    venue_url = StringField(u'地点链接',
-                            validators=[Optional(), Length(1, 128), URL()])
+    # venue_url = StringField(u'地点链接',
+    #                         validators=[Optional(), Length(1, 128), URL()])
     # date = DateField(u'日期')
     submit = SubmitField(u'提交')
 
     def from_model(self, talk):
         self.title.data = talk.title
         self.description.data = talk.description
+        # self.tags.data = talk.tags
         # self.slides.data = talk.slides
         # self.video.data = talk.video
-        self.venue.data = talk.venue
-        self.venue_url.data = talk.venue_url
+        # self.venue.data = talk.venue
+        # self.venue_url.data = talk.venue_url
         # self.date.data = talk.date
 
     def to_model(self, talk):
         talk.title = self.title.data
         talk.description = self.description.data
-        # talk.slides = self.slides.data
-        # talk.video = self.video.data
-        talk.venue = self.venue.data
-        talk.venue_url = self.venue_url.data
+        tag_list = self.tags.data.split(" ")
+        for t in tag_list:
+            tag = Tag.query.filter_by(name=t).first()    #first方法在没有结果时返回None, 这一点需要注意
+            if not tag:
+                tag = Tag(name=t)
+            talk.add_tag(tag)
+        # talk.tags
+
+        # talk.venue_url = self.venue_url.data
         # talk.date =
 
 
 class PresenterCommentForm(FlaskForm):
+    reply_id = HiddenField()
     body = PageDownField('Comment', validators=[DataRequired()])
     submit = SubmitField('Submit')
 

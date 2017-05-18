@@ -3,7 +3,7 @@ from flask import render_template, flash, redirect, url_for, abort,\
     request, current_app, g
 from flask_login import login_required, current_user
 from .. import db
-from ..models import User, Post, Comment
+from ..models import User, Post, Comment, post_tag
 # from ..emails import send_author_notification, send_comment_notification
 from . import talks
 from .forms import ProfileForm, TalkForm, CommentForm, PresenterCommentForm
@@ -17,7 +17,7 @@ def index():
         page, per_page=current_app.config['TALKS_PER_PAGE'],
         error_out=False)
     talk_list = pagination.items
-    return render_template('talks/index.html', talks=talk_list,
+    return render_template('talks/index.html', talks=talk_list, read_only=True,
                            pagination=pagination)
 
 @talks.route('/explore')
@@ -28,7 +28,7 @@ def explore():
         page, per_page=current_app.config['TALKS_PER_PAGE'],
         error_out=False)
     talk_list = pagination.items
-    return render_template('talks/index.html', talks=talk_list,
+    return render_template('talks/index.html', talks=talk_list, read_only=True,
                            pagination=pagination)
 
 
@@ -43,7 +43,7 @@ def user(username):
     if user == current_user:
 
         return render_template('talks/user.html', user=user, talks=talk_list,
-                           followed=len(list(user.user_follow))-1, followers=len(list(user.followee))-1,
+                           followed=len(list(user.followee))-1, followers=len(list(user.fans))-1,
                            pagination=pagination)
     return render_template('talks/user.html', user=user, talks=talk_list,
                            pagination=pagination)
@@ -72,11 +72,13 @@ def profile():
 def new_talk():
     form = TalkForm()
     if form.validate_on_submit():
+        print("post_tag count: {}".format(db.session.query(post_tag).all()))
         talk = Post(author=current_user)
         form.to_model(talk)
         db.session.add(talk)
         db.session.commit()
         flash(u'发布成功')
+        print("post_tag count: {}".format(db.session.query(post_tag).all()))
         return redirect(url_for('.index'))
     return render_template('talks/edit_talk.html', form=form)
 
@@ -89,7 +91,7 @@ def talk(id):
         form = PresenterCommentForm()
         if form.validate_on_submit():
             comment = Comment(body=form.body.data,
-                              post=post,
+                              post=post, reply_id = int(form.data.get("reply_id")) if form.data.get("reply_id") else None,
                               author=current_user,
                               approved=True)
     else:

@@ -10,11 +10,17 @@ from flask_login import UserMixin
 from . import db, login_manager
 
 
-followers = db.Table(
+user_relationship = db.Table(
     'user_follow',
     db.Column('follower_id', db.Integer, db.ForeignKey('user.id')),
     db.Column('followee_id', db.Integer, db.ForeignKey('user.id'))
 )
+
+post_tag = db.Table('post_tag',
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id')),
+    db.Column('post_id', db.Integer, db.ForeignKey('post.id'))
+)
+
 
 
 class User(UserMixin, db.Model):
@@ -33,11 +39,11 @@ class User(UserMixin, db.Model):
     avatar_hash = db.Column(db.String(64))
     posts = db.relationship('Post', lazy='dynamic', backref='author')
     comments = db.relationship('Comment', lazy='dynamic', backref='author')
-    followee = db.relationship('User',
-                               secondary=followers,
-                               primaryjoin=(followers.c.follower_id == id),
-                               secondaryjoin=(followers.c.followee_id == id),
-                               backref=db.backref('user_follow', lazy='dynamic'),
+    followee = db.relationship('User',       #对于一个user, user.followee代表当前用户在关注的人, user.fans代表当前用户的粉丝
+                               secondary=user_relationship,
+                               primaryjoin=(user_relationship.c.follower_id == id),
+                               secondaryjoin=(user_relationship.c.followee_id == id),
+                               backref=db.backref('fans', lazy='dynamic'),
                                lazy='dynamic')
 
     def follow(self, user):
@@ -52,12 +58,12 @@ class User(UserMixin, db.Model):
 
     def is_following(self, user):
         return self.followee.filter(
-            followers.c.followee_id == user.id).count() > 0
+            user_relationship.c.followee_id == user.id).count() > 0
 
     def followed_posts(self):
         return Post.query.join(
-            followers, (followers.c.followee_id == Post.user_id)).filter(
-                followers.c.follower_id == self.id).order_by(
+            user_relationship, (user_relationship.c.followee_id == Post.user_id)).filter(
+            user_relationship.c.follower_id == self.id).order_by(
             Post.date.desc())
 
     def __init__(self, **kwargs):
@@ -123,10 +129,14 @@ class Post(db.Model):
     title = db.Column(db.String(128), nullable=False)
     description = db.Column(db.Text)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    venue = db.Column(db.String(128))
-    venue_url = db.Column(db.String(128))
+    # venue = db.Column(db.String(128))
+    # venue_url = db.Column(db.String(128))
     date = db.Column(db.DateTime(), default=datetime.utcnow)
     comments = db.relationship('Comment', lazy='dynamic', backref='post', uselist=True)
+    tags = db.relationship(
+        "Tag", lazy='dynamic',
+        secondary=post_tag,
+        back_populates="posts")
 
     def approved_comments(self):
         return self.comments.filter_by(approved=True)
@@ -134,6 +144,14 @@ class Post(db.Model):
     def get_unsubscribe_token(self, email, expiration=604800):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
         return s.dumps({'talk': self.id, 'email': email}).decode('utf-8')
+
+    def add_tag(self, tag):
+        is_existed = self.tags.filter(post_tag.c.post_id == self.id, post_tag.c.tag_id == tag.id).count() > 0
+        if is_existed:
+            pass
+        else:
+            self.tags.append(tag)
+            return self
 
     @staticmethod
     def unsubscribe_user(token):
@@ -154,6 +172,19 @@ class Post(db.Model):
             .update({'notify': False})
         db.session.commit()
         return talk, email
+
+class Tag(db.Model):
+    __tablename__ = 'tag'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), nullable=False)
+    description = db.Column(db.String(256))
+    created_time = db.Column(db.DateTime(), default=datetime.utcnow)
+    is_valid = db.Column(db.Boolean, default=False)
+    posts = db.relationship(
+        "Post", lazy='dynamic',
+        secondary=post_tag,
+        back_populates="tags")
+
 
 
 class Comment(db.Model):
@@ -190,7 +221,10 @@ class Comment(db.Model):
     def reply_name(self):
         if not self.reply_id:
             return None
-        return User.query.get(self.reply_id).username
+        author_id = Comment.query.get(self.reply_id).author_id
+        if not author_id:
+            return None
+        return User.query.get(author_id).username
 
     @staticmethod
     def for_moderation():

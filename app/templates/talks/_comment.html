@@ -27,7 +27,7 @@
         (<a href="mailto:{{ comment.author_email }}">{{ comment.author_email }}</a>)
         {% endif %}
     {% endif %}
-    {% if comment.reply_id %}
+    {% if comment.reply_name %}
     reply to <a href="{{ url_for('.user', username=comment.reply_name) }}">{{ comment.reply_name }}</a>
     {% else %}
     commented
