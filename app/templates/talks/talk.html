@@ -47,7 +47,7 @@ background-color:red;
 {% block scripts %}
 {{ super() }}
 {{ pagedown.include_pagedown() }}
-<script src="http://cdnjs.cloudflare.com/ajax/libs/autosize.js/1.18.1/jquery.autosize.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/autosize.js/1.18.1/jquery.autosize.min.js"></script>
 <script>
     $(document).ready(function() {
         $('#flask-pagedown-body').autosize();
@@ -113,17 +113,14 @@ $("body").on("submit", ".frm_add", function (event){
 });
 
 $('.glyphicon-thumbs-up').click(function(event) {
-    // get all the inputs into an array.
 {#    event.preventDefault();#}
 
     var comment_body = $(event.target).closest(".comment-body");
     var target_id = comment_body.attr("data-comment-id");
     var target_type = comment_body.attr("data-type");
     var current_url = window.location.pathname;
-{#    alert(target_id);#}
-{#    var form = $(event.target);#}
     $.ajax({
-    url : current_url + "/approve",
+    url : current_url + "/approve_comment",
     type: "POST",
     data : {target_id: target_id, target_type: target_type},
     success: function(data, textStatus, jqXHR)
@@ -133,19 +130,39 @@ $('.glyphicon-thumbs-up').click(function(event) {
             var element = comment_body.find(".upvote-count");
 {#            console.log(element);#}
             var approve_count = parseInt(element.text()) + 1;
-{#            alert(approve_count);#}
             element.text(approve_count);
-
-
         }
     },
     error: function (jqXHR, textStatus, errorThrown)
-    {
-
-    }
+    {}
+    });
 });
 
 
+$('.glyphicon-heart').click(function(event) {
+
+{#    alert("ni");#}
+
+{#    var comment_body = $(event.target).closest(".comment-body");#}
+{#    var target_id = comment_body.attr("data-comment-id");#}
+{#    var target_type = comment_body.attr("data-type");#}
+{#    var current_url = window.location.pathname;#}
+{#    $.ajax({#}
+{#    url : current_url + "/approve",#}
+{#    type: "POST",#}
+{#    data : {target_id: target_id, target_type: target_type},#}
+{#    success: function(data, textStatus, jqXHR)#}
+{#    {#}
+{#        console.log(data);#}
+{#        if (data.rs == 1) {#}
+{#            var element = comment_body.find(".upvote-count");#}
+{#            var approve_count = parseInt(element.text()) + 1;#}
+{#            element.text(approve_count);#}
+{#        }#}
+{#    },#}
+{#    error: function (jqXHR, textStatus, errorThrown)#}
+{#    {}#}
+{#    });#}
 });
 
 </script>

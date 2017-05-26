@@ -1,6 +1,8 @@
 # encoding: utf8
 from datetime import datetime
 import hashlib
+
+from flask import url_for
 from markdown import markdown
 import bleach
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -22,6 +24,12 @@ post_tag = db.Table('post_tag',
 )
 
 
+user_tag = db.Table('user_tag',
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id')),
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'))
+)
+
+
 
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
@@ -39,26 +47,44 @@ class User(UserMixin, db.Model):
     avatar_hash = db.Column(db.String(64))
     posts = db.relationship('Post', lazy='dynamic', backref='author')
     comments = db.relationship('Comment', lazy='dynamic', backref='author')
+    messages = db.relationship('Message', foreign_keys="Message.receiver", lazy='dynamic')
     followee = db.relationship('User',       #对于一个user, user.followee代表当前用户在关注的人, user.fans代表当前用户的粉丝
                                secondary=user_relationship,
                                primaryjoin=(user_relationship.c.follower_id == id),
                                secondaryjoin=(user_relationship.c.followee_id == id),
                                backref=db.backref('fans', lazy='dynamic'),
                                lazy='dynamic')
+    tags = db.relationship(
+        "Tag", lazy='dynamic',
+        secondary=user_tag,
+        back_populates="users")
 
-    def follow(self, user):
-        if not self.is_following(user):
-            self.followee.append(user)
+    def follow(self, obj):
+        if not self.is_following(obj):
+            if isinstance(obj, User):
+                self.followee.append(obj)
+            elif isinstance(obj, Tag):
+                self.tags.append(obj)
             return self
 
-    def unfollow(self, user):
-        if self.is_following(user):
-            self.followee.remove(user)
+    def unfollow(self, obj):
+        if self.is_following(obj):
+            if isinstance(obj, User):
+                self.followee.remove(obj)
+            elif isinstance(obj, Tag):
+                self.tags.remove(obj)
             return self
 
-    def is_following(self, user):
-        return self.followee.filter(
-            user_relationship.c.followee_id == user.id).count() > 0
+    def is_following(self, obj):
+        if isinstance(obj, User):
+            return self.followee.filter(
+            user_relationship.c.followee_id == obj.id).count() > 0
+        elif isinstance(obj, Tag):
+            return db.session.query(user_tag).filter(user_tag.c.user_id == self.id, user_tag.c.tag_id==obj.id).count() > 0
+    # def follow_tag(self, tag):
+    #     if not self.is_following(tag):
+    #         self.tags.append(tag)
+    #         return self
 
     def followed_posts(self):
         return Post.query.join(
@@ -87,7 +113,7 @@ class User(UserMixin, db.Model):
         if request.is_secure:
             url = 'https://secure.gravatar.com/avatar'
         else:
-            url = 'http://www.gravatar.com/avatar'
+            url = 'https://www.gravatar.com/avatar'
         hash = self.avatar_hash or \
                hashlib.md5(self.email.encode('utf-8')).hexdigest()
         return '{url}/{hash}?s={size}&d={default}&r={rating}'.format(
@@ -141,6 +167,11 @@ class Post(db.Model):
     def approved_comments(self):
         return self.comments.filter_by(approved=True)
 
+    @property
+    def approve_count(self):
+        return User_Approve.query.filter(User_Approve.target_type == "post",
+                                         User_Approve.target_id == self.id).count()
+
     def get_unsubscribe_token(self, email, expiration=604800):
         s = Serializer(current_app.config['SECRET_KEY'], expiration)
         return s.dumps({'talk': self.id, 'email': email}).decode('utf-8')
@@ -184,6 +215,53 @@ class Tag(db.Model):
         "Post", lazy='dynamic',
         secondary=post_tag,
         back_populates="tags")
+    users = db.relationship(
+        "User", lazy='dynamic',
+        secondary=user_tag,
+        back_populates="tags")
+
+
+class Message(db.Model):
+    __tablename__ = 'message'
+    id = db.Column(db.Integer, primary_key=True)
+    action = db.Column(db.String(64))
+    timestamp = db.Column(db.DateTime(), default=datetime.utcnow, nullable=False)
+    unread = db.Column(db.Boolean, default=True, nullable=False)
+    sender = db.Column(db.Integer, db.ForeignKey('user.id'))
+    sender_email = db.Column(db.String(64))
+    receiver = db.Column(db.Integer, db.ForeignKey('user.id'))
+    target_id = db.Column(db.Integer)
+    target_type = db.Column(db.String(64))
+
+    @property
+    def sender_name(self):
+        if self.sender:
+            return User.query.get(self.sender).username
+        return None
+
+    @property
+    def target(self):
+        if self.target_type == "post":
+            target = Post.query.get(self.target_id)
+            target.info = {"url": url_for('talks.talk', id=self.target_id), "repr": target.title}
+        elif self.target_type == "comment":
+            target = Comment.query.get(self.target_id)
+            target.info = {"url": url_for('talks.talk', id=target.post_id), "repr": target.body}
+        elif self.target_type == "user":
+            target = User.query.get(self.target_id)
+            target.info = {"url": url_for('talks.user', username=target.username), "repr": target.username}
+        return target
+
+    @property
+    def target_url(self):
+        pass
+
+    @property
+    def target_repr(self):
+        pass
+
+
+
 
 
 
@@ -199,7 +277,7 @@ class Comment(db.Model):
     notify = db.Column(db.Boolean, default=True)
     approved = db.Column(db.Boolean, default=False)
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
-    reply_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
+    reply_id = db.Column(db.Integer, db.ForeignKey('comments.id'))    #本条评论所要回复的评论的ID
     parent_id = db.Column(db.Integer, db.ForeignKey('comments.id'))
     children = db.relationship('Comment', backref=db.backref("parent", remote_side=[id]),  uselist=True,
                                      foreign_keys="Comment.parent_id")
@@ -218,13 +296,28 @@ class Comment(db.Model):
         return User_Approve.query.filter(User_Approve.target_type=="comment", User_Approve.target_id==self.id).count()
 
     @property
-    def reply_name(self):
+    def reply_user(self):  # 所要回复的评论的作者
         if not self.reply_id:
             return None
         author_id = Comment.query.get(self.reply_id).author_id
         if not author_id:
             return None
-        return User.query.get(author_id).username
+        return User.query.get(author_id)
+
+
+
+    @property
+    def reply_name(self):   #所要回复的评论的作者名字
+        # if not self.reply_id:
+        #     return None
+        # author_id = Comment.query.get(self.reply_id).author_id
+        # if not author_id:
+        #     return None
+        # return User.query.get(author_id).username
+        if self.reply_user:
+            return self.reply_user.username
+        else:
+            return None
 
     @staticmethod
     def for_moderation():

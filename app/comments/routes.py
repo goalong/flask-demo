@@ -3,7 +3,7 @@ from flask import render_template, flash, redirect, url_for, abort,\
     request, current_app, g, jsonify
 from flask_login import login_required, current_user
 from .. import db
-from ..models import  Post, Comment, User_Approve
+from ..models import  Message, Comment, User_Approve, Post
 from . import comment
 
 
@@ -27,9 +27,9 @@ def reply_comment(post_id):
     return jsonify(rs="olla")
 
 
-@comment.route('/post/<int:post_id>/approve', methods=['POST'])
+@comment.route('/post/<int:post_id>/approve_comment', methods=['POST'])
 @login_required
-def approve_comment(post_id):
+def approve(post_id):
     target_id = request.form.get('target_id', 0, type=int)
     target_type = request.form.get('target_type', '', type=str)
     is_approved = User_Approve.query.filter_by(target_id=target_id, target_type=target_type,
@@ -39,7 +39,12 @@ def approve_comment(post_id):
         new_approve = User_Approve(target_id=target_id, target_type=target_type,
                               user_id=current_user.id,
                               approved=True)
+        comment = Comment.query.get(target_id)
+        message = Message(sender=current_user.id, receiver=comment.author_id, action='approve comment',
+                          target_id=comment.id, target_type="comment")
+
         db.session.add(new_approve)
+        db.session.add(message)
         db.session.commit()
         rs = 1
     elif is_approved == 1:
@@ -52,14 +57,37 @@ def approve_comment(post_id):
         rs = 0
     return jsonify(rs=rs)
 
-@comment.route('/explore')
+
+
+@comment.route('/post/<int:post_id>/approve', methods=['POST'])
 @login_required
-def explore():
-    page = request.args.get('page', 1, type=int)
-    pagination = Post.query.order_by(Post.date.desc()).paginate(
-        page, per_page=current_app.config['TALKS_PER_PAGE'],
-        error_out=False)
-    talk_list = pagination.items
-    return render_template('talks/index.html', talks=talk_list,
-                           pagination=pagination)
+def approve_post(post_id):
+    target_id = request.form.get('target_id', 0, type=int)
+    target_type = request.form.get('target_type', '', type=str)
+    is_approved = User_Approve.query.filter_by(target_id=target_id, target_type=target_type,
+                              user_id=current_user.id,
+                              approved=True).count()
+    if is_approved < 1:
+        new_approve = User_Approve(target_id=target_id, target_type=target_type,
+                              user_id=current_user.id,
+                              approved=True)
+        post = Post.query.get(target_id)
+        message = Message(sender=current_user.id, receiver=post.user_id, action='approve post',
+                          target_id=post.id, target_type="post")
+
+        db.session.add(new_approve)
+        db.session.add(message)
+        db.session.commit()
+        rs = 1
+    elif is_approved == 1:
+        rs = 0
+    else:
+        db.session.query(User_Approve).filter_by(target_id=target_id, target_type=target_type,
+                              user_id=current_user.id,
+                              approved=True).delete()
+        db.session.commit()
+        rs = 0
+    return jsonify(rs=rs)
+
+
 

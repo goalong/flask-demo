@@ -11,9 +11,17 @@
     <a class="btn btn-danger pull-right" href="{{ url_for('talks.edit_talk', id=talk.id) }}">Edit</a>
     {% endif %}
     {% endif %}
-    <h2><a href="{{ url_for('talks.talk', id=talk.id) }}">{{ talk.title }}</a></h2>
-    <h3>{{ talk.description }}</h3>
-    <div class="pull-right"><a href="{{ url_for('talks.talk', id=talk.id) }}#comments"><span class="label label-default">Comments: {{ talk.approved_comments().count() }}</span></a></div>
+    <h3><a href="{{ url_for('talks.talk', id=talk.id) }}">{{ talk.title }}</a></h3>
+    <p>{% if talk.description|length > 100 and not show_full_content %}
+        {{ talk.description[:100]+"..." }}
+    {% else %}
+    {{ talk.description }}
+    {% endif %}</p>
+    <div class="pull-right" data-post-id={{ talk.id }}>
+        <span class="glyphicon glyphicon-heart"></span>
+<span class="approve-count label label-default">{{ talk.approve_count }}</span>
+        <a href="{{ url_for('talks.talk', id=talk.id) }}#comments"><span class="label label-default">Comments: {{ talk.approved_comments().count() }}</span></a>
+    </div>
 
     <p>
         Presented by <a href="{{ url_for('talks.user', username=talk.author.username) }}">{{ talk.author.username }}</a> at

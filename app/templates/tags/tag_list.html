@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block page_content %}
+<div class="page-header user-profile">
+    {% for tag in tag_list %}
+    <a href="{{ url_for('tag.tag_profile', tag_name=tag.name) }}"><h1>{{ tag.name }}</h1></a>
+        {% if current_user.is_authenticated %}
+        {% if current_user.is_following(tag) %}
+        <a href="{{ url_for('tag.unfollow_tag', tag_name=tag.name) }}">取消关注</a>
+        {% else %}
+        <a href="{{ url_for('tag.follow_tag', tag_name=tag.name) }}">关注</a>
+        {% endif %}
+        {% endif %}
+    {% endfor %}
+
+    <p>
+
+    </p>
+</div>
+{% if talks %}
+<ul class="pager">
+    {% if pagination.has_prev %}
+    <li class="previous"><a href="{{ url_for('talks.user', username=user.username, page=pagination.prev_num) }}">&larr; Newer</a></li>
+    {% else %}
+    <li class="previous disabled"><a href="#">&larr; Newer</a></li>
+    {% endif %}
+    {% if pagination.has_next %}
+    <li class="next"><a href="{{ url_for('talks.user', username=user.username, page=pagination.next_num) }}">Older &rarr;</a></li>
+    {% else %}
+    <li class="next disabled"><a href="#">Older &rarr;</a></li>
+    {% endif %}
+</ul>
+{% endif %}
+{% endblock %}

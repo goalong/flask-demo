@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block page_content %}
+<div class="page-header user-profile">
+    {% for message in messages %}
+        {% if message.sender_name %}
+    <h3><a href="{{ url_for('talks.user', username=message.sender_name) }}">{{ message.sender_name }} </a> {{ message.action }}  to
+        <a href="{{ message.target.info.url }}">{{ message.target.info.repr }}</a></h3> <br>
+        {% else %}
+        <h3>{{ message.sender_email }} {{ message.action }}  to
+        <a href="{{ message.target.info.url }}">{{ message.target.info.repr }}</a></h3> <br>
+        {% endif %}
+    {% endfor %}
+    <p>
+
+    </p>
+</div>
+{#{% if talks %}#}
+{#<ul class="pager">#}
+{#    {% if pagination.has_prev %}#}
+{#    <li class="previous"><a href="{{ url_for('talks.user', username=user.username, page=pagination.prev_num) }}">&larr; Newer</a></li>#}
+{#    {% else %}#}
+{#    <li class="previous disabled"><a href="#">&larr; Newer</a></li>#}
+{#    {% endif %}#}
+{#    {% if pagination.has_next %}#}
+{#    <li class="next"><a href="{{ url_for('talks.user', username=user.username, page=pagination.next_num) }}">Older &rarr;</a></li>#}
+{#    {% else %}#}
+{#    <li class="next disabled"><a href="#">Older &rarr;</a></li>#}
+{#    {% endif %}#}
+{#</ul>#}
+{#{% endif %}#}
+{% endblock %}

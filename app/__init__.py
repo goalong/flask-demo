@@ -51,7 +51,7 @@ def create_app(config_name):
         syslog_handler.setLevel(logging.WARNING)
         app.logger.addHandler(syslog_handler)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-    app.config['BOOTSTRAP_SERVE_LOCAL'] = True
+    # app.config['BOOTSTRAP_SERVE_LOCAL'] = True
 
     bootstrap.init_app(app)
     db.init_app(app)
@@ -59,14 +59,16 @@ def create_app(config_name):
     pagedown.init_app(app)
     mail.init_app(app)
     login_manager.init_app(app)
-    with app.app_context():
-        db.create_all()
+
 
     from .talks import talks as talks_blueprint
     app.register_blueprint(talks_blueprint)
 
     from .tags import tag as tag_blueprint
     app.register_blueprint(tag_blueprint)
+
+    from .messages import message as message_bluepring
+    app.register_blueprint(message_bluepring)
 
     from .comments import comment as comment_blueprint
     app.register_blueprint(comment_blueprint)
@@ -76,6 +78,9 @@ def create_app(config_name):
 
     from .api_1_0 import api as api_blueprint
     app.register_blueprint(api_blueprint, url_prefix='/api/1.0')
+
+    with app.app_context():
+        db.create_all()
 
     # from app.emails import start_email_thread
     # @app.before_first_request
