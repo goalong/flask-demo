@@ -86,7 +86,7 @@ class User(UserMixin, db.Model):
     #         self.tags.append(tag)
     #         return self
 
-    def followed_posts(self):
+    def followed_posts(self):     #Todo, need union follow tag's posts
         return Post.query.join(
             user_relationship, (user_relationship.c.followee_id == Post.user_id)).filter(
             user_relationship.c.follower_id == self.id).order_by(
@@ -211,6 +211,7 @@ class Tag(db.Model):
     description = db.Column(db.String(256))
     created_time = db.Column(db.DateTime(), default=datetime.utcnow)
     is_valid = db.Column(db.Boolean, default=False)
+    creator_id = db.Column(db.Integer, db.ForeignKey('user.id'))   #在标签的详情页会有展示，以鼓励活跃的内容贡献者
     posts = db.relationship(
         "Post", lazy='dynamic',
         secondary=post_tag,
