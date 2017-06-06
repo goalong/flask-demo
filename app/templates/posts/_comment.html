@@ -5,7 +5,7 @@
         {% endif %}
         <a href="{{ url_for('.user', username=comment.author.username) }}">{{ comment.author.username }}</a>
     {% else %}
-        {% if talk.author == current_user or current_user.is_admin %}
+        {% if post.author == current_user or current_user.is_admin %}
             {% if not comment.approved %}
             <div id="moderate-{{ comment.id }}" class="pull-right">
                 <a class="btn btn-primary api-approve" data-id="{{ comment.id }}" href="#"><span class="glyphicon glyphicon-ok"></span> Approve</a>
@@ -23,7 +23,7 @@
         <span class="label label-default">#{{ index }}</span>
         {% endif %}
         <b>{{ comment.author_name }}</b>
-        {% if current_user.is_authenticated and (talk.author == current_user or current_user.is_admin) %}
+        {% if current_user.is_authenticated and (post.author == current_user or current_user.is_admin) %}
         (<a href="mailto:{{ comment.author_email }}">{{ comment.author_email }}</a>)
         {% endif %}
     {% endif %}
@@ -46,6 +46,6 @@
         <span class="separator">·</span>
     <span class="glyphicon glyphicon-comment reply_comment"></span>
     </div>
-{#    {% include "talks/_child_comments.html" %}#}
+{#    {% include "post/_child_comments.html" %}#}
 
 </div>

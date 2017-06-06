@@ -17,7 +17,7 @@ def tag_profile(tag_name):
         error_out=False)
     talk_list = pagination.items
 
-    return render_template('tags/tag.html', talks=talk_list, tag=tag,
+    return render_template('tags/tag.html', posts=talk_list, tag=tag,
                            pagination=pagination)
 
 @tag.route('/tags/')

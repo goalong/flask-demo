@@ -195,14 +195,14 @@ class Post(db.Model):
         email = data.get('email')
         if not id or not email:
             return None, None
-        talk = Post.query.get(id)
-        if not talk:
+        post = Post.query.get(id)
+        if not post:
             return None, None
         Comment.query\
-            .filter_by(talk=talk).filter_by(author_email=email)\
+            .filter_by(post=post).filter_by(author_email=email)\
             .update({'notify': False})
         db.session.commit()
-        return talk, email
+        return post, email
 
 class Tag(db.Model):
     __tablename__ = 'tag'
@@ -244,13 +244,13 @@ class Message(db.Model):
     def target(self):
         if self.target_type == "post":
             target = Post.query.get(self.target_id)
-            target.info = {"url": url_for('talks.talk', id=self.target_id), "repr": target.title}
+            target.info = {"url": url_for('posts.post', id=self.target_id), "repr": target.title}
         elif self.target_type == "comment":
             target = Comment.query.get(self.target_id)
-            target.info = {"url": url_for('talks.talk', id=target.post_id), "repr": target.body}
+            target.info = {"url": url_for('posts.post', id=target.post_id), "repr": target.body}
         elif self.target_type == "user":
             target = User.query.get(self.target_id)
-            target.info = {"url": url_for('talks.user', username=target.username), "repr": target.username}
+            target.info = {"url": url_for('posts.user', username=target.username), "repr": target.username}
         return target
 
     @property
@@ -324,22 +324,22 @@ class Comment(db.Model):
     def for_moderation():
         return Comment.query.filter(Comment.approved == False)
 
-    def notification_list(self):
-        list = {}
-        for comment in self.talk.comments:
-            # include all commenters that have notifications enabled except
-            # the author of the talk and the author of this comment
-            if comment.notify and comment.author != comment.talk.author:
-                if comment.author:
-                    # registered user
-                    if self.author != comment.author:
-                        list[comment.author.email] = comment.author.name or \
-                                                     comment.author.username
-                else:
-                    # regular user
-                    if self.author_email != comment.author_email:
-                        list[comment.author_email] = comment.author_name
-        return list.items()
+    # def notification_list(self):
+    #     list = {}
+    #     for comment in self.talk.comments:
+    #         # include all commenters that have notifications enabled except
+    #         # the author of the talk and the author of this comment
+    #         if comment.notify and comment.author != comment.talk.author:
+    #             if comment.author:
+    #                 # registered user
+    #                 if self.author != comment.author:
+    #                     list[comment.author.email] = comment.author.name or \
+    #                                                  comment.author.username
+    #             else:
+    #                 # regular user
+    #                 if self.author_email != comment.author_email:
+    #                     list[comment.author_email] = comment.author_name
+    #     return list.items()
 
 
 db.event.listen(Comment.body, 'set', Comment.on_changed_body)

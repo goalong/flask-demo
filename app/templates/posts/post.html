@@ -10,31 +10,31 @@ background-color:red;
 
 {% block page_content %}
 <div class="page-header">
-    {% include "talks/_talk_header.html" %}
+    {% include "posts/_post_header.html" %}
 </div>
-<div class="talk-body">
-    {% if talk.video %}
-    <div class="talk-video">
-    {{ talk.video | safe }}
+<div class="post-body">
+    {% if post.video %}
+    <div class="post-video">
+    {{ post.video | safe }}
     </div>
     {% endif %}
-    {% if talk.slides %}
-    <div class="talk-slides">
-    {{ talk.slides | safe }}
+    {% if post.slides %}
+    <div class="post-slides">
+    {{ post.slides | safe }}
     </div>
     {% endif %}
 </div>
 {% if comments %}
 <h3 id="comments">Comments</h3>
-{% include "talks/_comments.html" %}
+{% include "posts/_comments.html" %}
 <ul class="pager">
     {% if pagination.has_prev %}
-    <li class="previous"><a href="{{ url_for('talks.talk', id=talk.id, page=pagination.prev_num) }}#comments">&larr; Older</a></li>
+    <li class="previous"><a href="{{ url_for('posts.post', id=post.id, page=pagination.prev_num) }}#comments">&larr; Older</a></li>
     {% else %}
     <li class="previous disabled"><a href="#">&larr; Older</a></li>
     {% endif %}
     {% if pagination.has_next %}
-    <li class="next"><a href="{{ url_for('talks.talk', id=talk.id, page=pagination.next_num) }}#comments">Newer &rarr;</a></li>
+    <li class="next"><a href="{{ url_for('posts.post', id=post.id, page=pagination.next_num) }}#comments">Newer &rarr;</a></li>
     {% else %}
     <li class="next disabled"><a href="#">Newer &rarr;</a></li>
     {% endif %}
@@ -61,9 +61,9 @@ $(".reply_comment").click(function(event) {
     $("input#reply_id").attr("value", comment_id);
 {#    $(".flask-pagedown-input").attr("reply-id", comment_id);#}
     $('html, body').animate({
-            scrollTop: $(".flask-pagedown-input").offset().top
+            scrollTop: $("#body").offset().top
         }, 500, function() {
-            $(".flask-pagedown-input").focus();
+            $("#body").focus();
         });
 
 {#    alert("tt");#}

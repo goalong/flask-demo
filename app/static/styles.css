@@ -3,6 +3,16 @@
     min-height: 140px;
 }
 
+a {
+    color: #613dff;
+}
+
+.tag {
+    /*background-color: red;*/
+    font-size: 90%;
+    color: darkgrey;
+}
+
 .user-avatar {
     float: left;
     margin-right: 16px;
@@ -40,39 +50,71 @@ div.talk-header p {
     margin: 20px 0px 0px 0px;
 }
 
-div.talk-video {
-    width: 450px;
-    max-width: 450px;
-    display: inline-block;
-    margin: 5px;
-    vertical-align: middle;
+
+ul.post-list {
+    list-style-type: none;
+    padding: 0px;
 }
 
-div.talk-slides {
-    width: 450px;
-    max-width: 450px;
-    display: inline-block;
-    margin: 5px;
-    vertical-align: middle;
-}
-
-.flask-pagedown-preview {
-    margin-top: 10px;
+li.post {
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
     padding: 10px;
-    border: 1px solid #ccc;
 }
 
-.flask-pagedown-preview h1, .comment-body h1 {
-    font-size: 160%;
+li.post:hover {
+    background-color: #f8f8f8;
 }
 
-.flask-pagedown-preview h2, .comment-body h2 {
-    font-size: 140%;
+div.post-header h2 {
+    font-size: 200%;
+    margin: 5px 0px 15px 0px;
 }
 
-.flask-pagedown-preview h3, .comment-body h3 {
-    font-size: 120%;
+div.post-header h3 {
+    font-size: 115%;
+    margin: 0px 0px 10px 0px;
 }
+
+div.post-header p {
+    font-size: 90%;
+    font-style: italic;
+    margin: 20px 0px 0px 0px;
+}
+
+/*div.talk-video {*/
+    /*width: 450px;*/
+    /*max-width: 450px;*/
+    /*display: inline-block;*/
+    /*margin: 5px;*/
+    /*vertical-align: middle;*/
+/*}*/
+
+/*div.talk-slides {*/
+    /*width: 450px;*/
+    /*max-width: 450px;*/
+    /*display: inline-block;*/
+    /*margin: 5px;*/
+    /*vertical-align: middle;*/
+/*}*/
+
+/*.flask-pagedown-preview {*/
+    /*margin-top: 10px;*/
+    /*padding: 10px;*/
+    /*border: 1px solid #ccc;*/
+/*}*/
+
+/*.flask-pagedown-preview h1, .comment-body h1 {*/
+    /*font-size: 160%;*/
+/*}*/
+
+/*.flask-pagedown-preview h2, .comment-body h2 {*/
+    /*font-size: 140%;*/
+/*}*/
+
+/*.flask-pagedown-preview h3, .comment-body h3 {*/
+    /*font-size: 120%;*/
+/*}*/
 
 ul.child-comments {
     list-style-type: none;

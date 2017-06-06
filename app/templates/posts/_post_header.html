@@ -1,0 +1,30 @@
+<div class="post-header">
+    {% if post.tags %}
+    {% for tag in post.tags %}
+    <a href="{{ url_for('tag.tag_profile', tag_name=tag.name) }}" class="tag">{{ tag.name }}</a>
+    {% endfor %}
+    {% endif %}
+    {% if  not read_only %}
+    {% if post.author == current_user %}
+    <a class="btn btn-primary pull-right" href="{{ url_for('posts.edit_post', id=post.id) }}">Edit</a>
+    {% elif current_user.is_admin %}
+    <a class="btn btn-danger pull-right" href="{{ url_for('posts.edit_post', id=post.id) }}">Edit</a>
+    {% endif %}
+    {% endif %}
+    <a href="{{ url_for('posts.post', id=post.id) }}"><h3>{{ post.title }}</h3></a>
+    {% if show_full_content %}
+        {{ post.description|safe }}
+    {% else %}
+{#    {{ post.description|safe }}#}
+    {% endif %}
+    <div class="pull-right" data-post-id={{ post.id }}>
+        <span class="glyphicon glyphicon-heart"></span>
+<span class="approve-count label label-default">{{ post.approve_count }}</span>
+        <a href="{{ url_for('posts.post', id=post.id) }}#comments"><span class="label label-default">Comments: {{ post.approved_comments().count() }}</span></a>
+    </div>
+
+    <p>
+        Presented by <a href="{{ url_for('posts.user', username=post.author.username) }}">{{ post.author.username }}</a> at
+        on {{ moment(post.date, local=True).format('LL') }}.
+    </p>
+</div>

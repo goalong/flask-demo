@@ -4,7 +4,7 @@
 <div class="page-header user-profile">
     {% for message in messages %}
         {% if message.sender_name %}
-    <h3><a href="{{ url_for('talks.user', username=message.sender_name) }}">{{ message.sender_name }} </a> {{ message.action }}  to
+    <h3><a href="{{ url_for('posts.user', username=message.sender_name) }}">{{ message.sender_name }} </a> {{ message.action }}  to
         <a href="{{ message.target.info.url }}">{{ message.target.info.repr }}</a></h3> <br>
         {% else %}
         <h3>{{ message.sender_email }} {{ message.action }}  to

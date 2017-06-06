@@ -61,8 +61,8 @@ def create_app(config_name):
     login_manager.init_app(app)
 
 
-    from .talks import talks as talks_blueprint
-    app.register_blueprint(talks_blueprint)
+    from .posts import posts as posts_blueprint
+    app.register_blueprint(posts_blueprint)
 
     from .tags import tag as tag_blueprint
     app.register_blueprint(tag_blueprint)

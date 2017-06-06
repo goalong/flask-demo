@@ -1,6 +1,6 @@
 from flask import Blueprint
 
-talks = Blueprint('talks', __name__)
+posts = Blueprint('posts', __name__)
 
 from . import routes
 
