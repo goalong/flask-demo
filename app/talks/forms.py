@@ -21,21 +21,17 @@ class TalkForm(FlaskForm):
     # slides = StringField('Slides Embed Code (450 pixels wide)')
     # video = StringField('Video Embed Code (450 pixels wide)')
     tags = StringField(u'标签',
-                        validators=[Length(1, 128)])
+                        validators=[Length(1, 128)], description=u"多个标签请用空格分开")
     # venue_url = StringField(u'地点链接',
     #                         validators=[Optional(), Length(1, 128), URL()])
     # date = DateField(u'日期')
-    submit = SubmitField(u'提交')
+    submit_button = SubmitField(u'提交', id='submit_post')
+
 
     def from_model(self, talk):
         self.title.data = talk.title
         self.description.data = talk.description
-        # self.tags.data = talk.tags
-        # self.slides.data = talk.slides
-        # self.video.data = talk.video
-        # self.venue.data = talk.venue
-        # self.venue_url.data = talk.venue_url
-        # self.date.data = talk.date
+
 
     def to_model(self, talk):
         talk.title = self.title.data
@@ -54,7 +50,7 @@ class TalkForm(FlaskForm):
 
 class PresenterCommentForm(FlaskForm):
     reply_id = HiddenField()
-    body = PageDownField('Comment', validators=[DataRequired()])
+    body = TextAreaField('Comment', validators=[DataRequired()])
     submit = SubmitField('Submit')
 
 
@@ -62,6 +58,6 @@ class CommentForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired(), Length(1, 64)])
     email = StringField('Email', validators=[DataRequired(), Length(1, 64),
                                              Email()])
-    body = PageDownField('Comment', validators=[DataRequired()])
+    body = TextAreaField('Comment', validators=[DataRequired()])
     notify = BooleanField('Notify when new comments are posted', default=True)
     submit = SubmitField(u'提交')

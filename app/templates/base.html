@@ -6,6 +6,8 @@
 {{ super() }}
 {#    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">#}
 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.css">
+<script src="https://cdn.jsdelivr.net/simplemde/latest/simplemde.min.js"></script>
 {% endblock %}
 
 {% block navbar %}
@@ -86,12 +88,9 @@
 {{ moment.include_moment() }}
     <script>
     $('.glyphicon-heart').click(function(event) {
-
-{#    alert("from base say helo");#}
-
         var p = $(event.target).closest("div");
         var post_id = p.attr("data-post-id");
-        alert(p.attr("data-post-id"));
+{#        alert(p.attr("data-post-id"));#}
         $.ajax({
         url : "/post/" + post_id + "/approve",
         type: "POST",
@@ -109,6 +108,24 @@
         {}
         });
 });
+</script>
+    <script>
+    if ($("#description")[0]) {
+        var simplemde = new SimpleMDE({element: $("#description")[0]});
+    };
+    $('#create_post_form').submit(function(event) {
+        event.preventDefault();
+      var content_html = simplemde.options.previewRender(simplemde.value());
+{#      alert(content_html);#}
+{#      $("#description").val('xilali');#}
+{#      $("#title").val("testssss");#}
+{#      alert($("#description").val());#}
+      simplemde.value(content_html);
+      this.submit();
+
+    })
+
+
 </script>
 {% endblock %}
 
