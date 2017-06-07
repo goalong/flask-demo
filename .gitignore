@@ -17,3 +17,5 @@ uploads/
 .python-version
 *.sqlite
 *.pyc
+deploy/
+
