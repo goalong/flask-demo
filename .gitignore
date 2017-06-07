@@ -18,4 +18,5 @@ uploads/
 *.sqlite
 *.pyc
 deploy/
+tests/
 
