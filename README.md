@@ -7,12 +7,12 @@
 2. cd flask-demo
 3. virtualenv venv
 4. source venv/bin/activate
-5. pip install -r requirements.txt
+5. pip install -r requirements_dev.txt
 6. python manage.py runserver
 7. 打开浏览器，在地址栏输入http://localhost:5000/
 8. 注册用户，在终端输入 python manage.py adduser <email> <username> 
 
-###Todo
+### Todo
 1.文章的收藏 delay
 2.文章的喜欢或者赞同, 赞同应该不近包括文章,还可以对评论,以及可能的其他对象
 3.文章加标签
@@ -42,6 +42,9 @@
 
 其实user_approve这个表应该拆分出几种(因为这个表的记录增长会很快),对文章的赞同是一个表,对评论的赞同是一个表,
 
-接下来重点: 加标签 加消息通知
 
 类似知乎的组织方式
+
+### update
+主要的代码都是三年前的了，定义model时用了许多的外键和关系，现在看来是不必要的，不过也不打算修改了，
+原本就是个玩具，意义不大。
